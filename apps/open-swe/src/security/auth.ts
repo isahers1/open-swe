@@ -18,7 +18,6 @@ import { verifyGitHubWebhookOrThrow } from "./github.js";
 import { createWithOwnerMetadata, createOwnerFilter } from "./utils.js";
 import { LANGGRAPH_USER_PERMISSIONS } from "../constants.js";
 import { getGitHubPatFromRequest } from "../utils/github-pat.js";
-import { validateApiBearerToken } from "./custom.js";
 
 // TODO: Export from LangGraph SDK
 export interface BaseAuthReturn {
