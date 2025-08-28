@@ -63,24 +63,6 @@ export const auth = new Auth()
       };
     }
 
-    // Bearer token auth (simple API key) — only when header is present
-    const authorizationHeader = request.headers.get("authorization");
-    if (
-      authorizationHeader &&
-      authorizationHeader.toLowerCase().startsWith("bearer ")
-    ) {
-      const token = authorizationHeader.slice(7).trim();
-      if (!token) {
-        throw new HTTPException(401, { message: "Missing bearer token" });
-      }
-
-      const user = validateApiBearerToken(token);
-      if (user) {
-        return user;
-      }
-      throw new HTTPException(401, { message: "Invalid API token" });
-    }
-
     const encryptionKey = process.env.SECRETS_ENCRYPTION_KEY;
     if (!encryptionKey) {
       throw new Error("Missing SECRETS_ENCRYPTION_KEY environment variable.");
