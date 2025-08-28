@@ -18,7 +18,6 @@ import { verifyGitHubWebhookOrThrow } from "./github.js";
 import { createWithOwnerMetadata, createOwnerFilter } from "./utils.js";
 import { LANGGRAPH_USER_PERMISSIONS } from "../constants.js";
 import { getGitHubPatFromRequest } from "../utils/github-pat.js";
-import { validateApiBearerToken } from "./custom.js";
 
 // TODO: Export from LangGraph SDK
 export interface BaseAuthReturn {
@@ -36,7 +35,6 @@ interface AuthenticateReturn extends BaseAuthReturn {
 
 export const auth = new Auth()
   .authenticate<AuthenticateReturn>(async (request: Request) => {
-    const isProd = process.env.NODE_ENV === "production";
 
     if (request.method === "OPTIONS") {
       return {
@@ -65,24 +63,6 @@ export const auth = new Auth()
       };
     }
 
-    // Bearer token auth (simple API key) — only when header is present
-    const authorizationHeader = request.headers.get("authorization");
-    if (
-      authorizationHeader &&
-      authorizationHeader.toLowerCase().startsWith("bearer ")
-    ) {
-      const token = authorizationHeader.slice(7).trim();
-      if (!token) {
-        throw new HTTPException(401, { message: "Missing bearer token" });
-      }
-
-      const user = validateApiBearerToken(token);
-      if (user) {
-        return user;
-      }
-      throw new HTTPException(401, { message: "Invalid API token" });
-    }
-
     const encryptionKey = process.env.SECRETS_ENCRYPTION_KEY;
     if (!encryptionKey) {
       throw new Error("Missing SECRETS_ENCRYPTION_KEY environment variable.");
@@ -96,7 +76,7 @@ export const auth = new Auth()
 
     // Check for GitHub PAT authentication (simpler mode for evals, etc.)
     const githubPat = getGitHubPatFromRequest(request, encryptionKey);
-    if (githubPat && !isProd) {
+    if (githubPat) {
       const user = await verifyGithubUser(githubPat);
       if (!user) {
         throw new HTTPException(401, {
